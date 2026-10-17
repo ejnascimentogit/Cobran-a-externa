@@ -64,7 +64,7 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 | `cob02_regra` | **Criada em 2026-10-17** por Edimilson no `EFR_ecommerce_tirapedidos`, com o SQL abaixo. **RLS ligada** (`alter table public.cob02_regra enable row level security;`, conferido com `pg_class.relrowsecurity = true`) e **sem policies**, ou seja, fechada para a API pública até as policies serem escritas. |
 | `cob02_regra`: faixas sem sobreposição | **Aplicado em 2026-10-17**: extensão `btree_gist` (schema `extensions`) e restrição de exclusão `cob02_faixas_sem_sobreposicao`. Testado: inserir "3 a 5" e depois "4 a 8" na mesma empresa falha com `23P01`, como esperado. |
 | `cob02_regra`: isolamento por empresa e gatilho | **Aplicado em 2026-10-17**: `select public.aplicar_isolamento('public.cob02_regra', 'cob02_empresa_id');` (policy `isolamento_empresa`, conferida em `pg_policies`) e gatilho `cob02_regra_atualizado_em` (conferido em `pg_trigger`). **A tabela está pronta.** A conferência de `relforcerowsecurity` ainda não foi enviada, mas a função liga os dois. |
-| `cob03_motivo` | **Criada em 2026-10-17** com a receita do projeto: colunas `cob03_id`, `cob03_uuid`, `cob03_empresa_id`, `cob03_nome`, `cob03_tipo` (`pago`, `promessa`, `negociado`, `sem_sucesso`), `cob03_ativo`, `cob03_criado_em`, `cob03_atualizado_em`; nome único por empresa (`cob03_nome_unico`); `aplicar_isolamento` e gatilho `cob03_motivo_atualizado_em`. Conferido: policy `isolamento_empresa`, gatilho e RLS/RLS forçada `true / true`. Sem linhas: os motivos iniciais ainda não foram cadastrados. |
+| `cob03_motivo` | **Criada em 2026-10-17** com a receita do projeto: colunas `cob03_id`, `cob03_uuid`, `cob03_empresa_id`, `cob03_nome`, `cob03_tipo` (`pago`, `promessa`, `negociado`, `sem_sucesso`), `cob03_ativo`, `cob03_criado_em`, `cob03_atualizado_em`; nome único por empresa (`cob03_nome_unico`); `aplicar_isolamento` e gatilho `cob03_motivo_atualizado_em`. Conferido: policy `isolamento_empresa`, gatilho e RLS/RLS forçada `true / true`. **Os 8 motivos iniciais** (de `docs/03-regras-de-negocio.md`) foram cadastrados em 2026-10-17 para a empresa `tb01_id = 1` (Comal). |
 | Demais (`cob01`, `cob04` a `cob11`, `int05`) | Não criadas. |
 
 Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
@@ -101,6 +101,12 @@ alter table public.cob02_regra
 ```
 
 As policies e o gatilho entram pelo padrão do projeto (seção abaixo).
+
+## `tb02_usuario` (colunas lidas em 2026-10-17)
+
+`tb02_id` (integer), `tb02_empresa_id` (integer), `tb02_codigo` (text, opcional), `tb02_nome`, `tb02_email`, `tb02_ativo` (default `true`), `tb02_criado_em`, `tb02_atualizado_em`, `tb02_auth_id` (uuid, opcional: o usuário do Supabase Auth), `tb02_papel` (text, default `'vendedor'`) e `tb02_codusur` (integer, opcional: provável código do usuário no ERP).
+
+Ainda não se sabe se `tb02_papel` tem restrição de valores (se aceita `'cobrador'`).
 
 ## Segurança e gatilho: padrão do projeto
 
