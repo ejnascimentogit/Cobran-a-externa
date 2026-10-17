@@ -14,3 +14,5 @@
 - [ ] Banco: confirmar o padrão de colunas, a RLS e a ligação com empresa e usuário do `EFR_ecommerce_tirapedidos` (ver [banco de dados e padrão](11-banco-de-dados-padrao.md)).
 - [ ] Banco: o plano Free/Nano pausa por inatividade e é pequeno para o rastreamento em tempo real; avaliar plano pago antes de produção.
 - [ ] O devedor da cobrança é o `tb04_cliente` do e-commerce ou uma tabela nova no grupo `int`?
+- [ ] **Requisito (2026-10-17): o app do motoqueiro funciona sem sinal.** Iniciar rota, check-in de cada cliente e finalização ficam guardados no aparelho e sobem para a nuvem quando o sinal voltar, na ordem em que aconteceram. Desenho e decisões abertas em [docs/12](12-modo-offline.md).
+
