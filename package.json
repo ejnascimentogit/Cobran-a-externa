@@ -1,0 +1,16 @@
+{
+  "name": "cobranca-externa",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/painel", "apps/motoqueiro"],
+  "scripts": {
+    "dev:painel": "npm run dev -w apps/painel",
+    "dev:motoqueiro": "npm run dev -w apps/motoqueiro",
+    "build": "npm run build -w apps/painel && npm run build -w apps/motoqueiro && node scripts/montar-dist.mjs",
+    "test": "node --test apps/compartilhado/teste/*.test.mjs",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

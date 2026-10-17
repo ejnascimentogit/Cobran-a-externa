@@ -17,6 +17,7 @@ Sistema de cobrança presencial de inadimplência por rota. Regras por faixa de 
 | [Sugestões e KPIs](docs/07-sugestoes.md) | Melhorias e indicadores |
 | [Roadmap](docs/08-roadmap.md) | Fases e critérios de passagem |
 | [Pontos em aberto](docs/09-pontos-em-aberto.md) | Decisões pendentes |
+| [Front-end e demonstração](docs/10-front-cloudflare.md) | Painel e app do motoqueiro, como rodar e publicar no Cloudflare |
 
 ## Responsáveis
 

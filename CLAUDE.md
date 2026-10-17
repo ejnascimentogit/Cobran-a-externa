@@ -13,3 +13,7 @@ Sistema de cobrança presencial de inadimplência por rota (motoqueiros). A espe
 
 - Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) — migrations em `supabase/migrations/`
 - Painel web em `apps/painel/`, app do motoqueiro em `apps/motoqueiro/`
+
+## Estado do front (demonstração)
+
+Painel (`apps/painel/`), app do motoqueiro (`apps/motoqueiro/`) e regras de negócio com testes (`apps/compartilhado/`) existem em modo demonstração, com dados fictícios no `localStorage`; publicam no Cloudflare como um só site (`wrangler.jsonc`, `npm run build`). Detalhes e como trocar pelo Supabase em `docs/10-front-cloudflare.md`. O projeto Supabase ainda não foi definido (a cobrança deve usar um schema próprio, `cobranca`); não aplicar migrations em `painel-workspaces` nem em `admfullcontrolefinanceiro`.
