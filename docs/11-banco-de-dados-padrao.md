@@ -76,6 +76,12 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 
 O estado final aplicado está em `supabase/migrations/20261017000000_cobranca_estado_aplicado.sql` (registro, **não rodar de novo** no mesmo banco).
 
+## Realtime e peças de servidor (2026-10-17)
+
+- **Realtime aplicado e conferido:** `cob04_rota`, `cob08_checkin` e `cob09_rastreamento` estão na publicação `supabase_realtime` (cada usuário só recebe o que a RLS deixa ver).
+- **A aplicar** (`supabase/migrations/20261017010000_cobranca_realtime_e_aceite.sql`): `cob01_aceitar_localizacao()` e `cob01_revogar_localizacao()` (`security definer`; o primeiro aceite fica guardado; só o papel `authenticated` executa). O motoqueiro não altera a própria linha direto.
+- **A publicar** (`supabase/functions/cobranca-criar-cobrador/index.ts`): cria o login do motoqueiro **sem `empresa_id` no `app_metadata`** (`app_metadata.papel = 'cobrador'`) e o cadastro em `cob01_cobrador`. Só o `empresa_admin` da empresa do token pode chamar; a empresa vem do token, nunca do corpo. A senha provisória (12 caracteres aleatórios) é devolvida uma única vez e o usuário nasce com `user_metadata.trocar_senha = true` para o app pedir a troca no primeiro acesso. Se o cadastro falhar, o login é desfeito.
+
 Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
 
 ## `cob02_regra`: SQL aplicado
