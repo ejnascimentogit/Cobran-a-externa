@@ -63,6 +63,7 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 | --- | --- |
 | `cob02_regra` | **Criada em 2026-10-17** por Edimilson no `EFR_ecommerce_tirapedidos`, com o SQL abaixo. **RLS ligada** (`alter table public.cob02_regra enable row level security;`, conferido com `pg_class.relrowsecurity = true`) e **sem policies**, ou seja, fechada para a API pública até as policies serem escritas. |
 | `cob02_regra`: faixas sem sobreposição | **Aplicado em 2026-10-17**: extensão `btree_gist` (schema `extensions`) e restrição de exclusão `cob02_faixas_sem_sobreposicao`. Testado: inserir "3 a 5" e depois "4 a 8" na mesma empresa falha com `23P01`, como esperado. |
+| `cob02_regra`: isolamento por empresa e gatilho | **Aplicado em 2026-10-17**: `select public.aplicar_isolamento('public.cob02_regra', 'cob02_empresa_id');` (policy `isolamento_empresa`, conferida em `pg_policies`) e gatilho `cob02_regra_atualizado_em` (conferido em `pg_trigger`). **A tabela está pronta.** A conferência de `relforcerowsecurity` ainda não foi enviada, mas a função liga os dois. |
 | Demais (`cob01`, `cob03` a `cob11`, `int05`) | Não criadas. |
 
 Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
@@ -98,16 +99,44 @@ alter table public.cob02_regra
   ) where (cob02_ativo);
 ```
 
-Faltam: policies no padrão do projeto e gatilho de `cob02_atualizado_em`.
+As policies e o gatilho entram pelo padrão do projeto (seção abaixo).
+
+## Segurança e gatilho: padrão do projeto
+
+Lido das tabelas `tb01_empresa`, `tb02_usuario`, `tb04_cliente` e das funções do schema `public`.
+
+- **`empresa_atual()`** (integer) decide a empresa:
+  - usuário logado: `app_metadata.empresa_id` do token (JWT);
+  - papel `agente_N` (integrador, como o ERP): o `N` do nome do papel;
+  - `service_role` ou SQL Editor: configuração de sessão `app.empresa_id`.
+- **`eh_owner()`**: dono do sistema, pelo claim `role` do token. A policy `owner_total` só existe em `tb01_empresa` e `tb02_usuario`, não nas tabelas de negócio.
+- **`aplicar_isolamento(p_tabela regclass, p_coluna text)`**: liga a RLS, liga a **RLS forçada** e cria a policy `isolamento_empresa` (`using` e `with check` com `p_coluna = empresa_atual()`). **Rodar uma vez por tabela**: não apaga policy existente.
+- **`conceder_ao_agente(p_tabela regclass)`**: dá `select, insert, update, delete` a todos os papéis `agente_%`. Usar só nas tabelas de **integração** (cache do ERP, do Ryan), não nas tabelas que o painel grava.
+- **`tocar_atualizado_em()`**: gatilho `BEFORE UPDATE` que grava `now()` na coluna passada como argumento. Cada tabela tem `<tabela>_atualizado_em`.
+- **Coluna da empresa:** `<prefixo>_empresa_id` (ex.: `tb04_empresa_id`, `cob02_empresa_id`).
+
+Receita para tabela nova:
+
+```sql
+-- 1) create table ... (colunas no padrão, com <prefixo>_empresa_id)
+select public.aplicar_isolamento('public.<tabela>', '<prefixo>_empresa_id');
+
+create trigger <tabela>_atualizado_em
+  before update on public.<tabela>
+  for each row execute function public.tocar_atualizado_em('<prefixo>_atualizado_em');
+```
+
+Para testar no SQL Editor lembre que `empresa_atual()` lê `app.empresa_id` na sessão; o `now()` do gatilho é o horário da transação.
 
 ## Pendências para fechar o padrão
 
-1. Nome da coluna que liga à empresa (`cob02_empresa_id` é suposição) e se `tb04_cliente` e `tb06_pedido` a têm.
-2. Tipo real de `tb01_id` (`integer` ou `bigint`, identidade ou sequência).
-3. Como `*_atualizado_em` é mantida (gatilho, função pronta).
-4. Como é a RLS do projeto (as policies de `tb01_empresa` e `tb02_usuario`) e como o motoqueiro, que grava check-in, entra nela.
+1. ~~Coluna da empresa~~ resolvido: `<prefixo>_empresa_id`.
+2. Tipo real de `tb01_id` (`integer` ou `bigint`): `cob02_id` foi criada como `integer`; conferir se as chaves do projeto são `integer` antes de criar tabelas que apontam para elas.
+3. ~~Gatilho de `_atualizado_em`~~ resolvido: `tocar_atualizado_em`.
+4. ~~RLS do projeto~~ resolvido para tabelas de negócio. **Em aberto:** como o motoqueiro (que grava check-in) entra no token com `empresa_id`, e se o app dele usa um papel `agente_N` ou login de usuário.
 5. Devedor: `tb04_cliente` ou tabela nova no grupo `int`.
 6. Número e nome das tabelas de cache do ERP.
+7. Prefixo das colunas das tabelas filhas: em `tb06_pedido_item` o gatilho usa `tb06_item_atualizado_em` (prefixo `tb06_item_`). Decidir se `cob05_rota_cobrador` usa `cob05_` (adotado até agora).
 
 Para fechar: prints do Table Editor com as colunas de `tb02_usuario` e `tb04_cliente` e das abas "RLS policies" e "Triggers" de uma delas, ou o resultado da consulta de colunas do `information_schema` (ver abaixo).
 
