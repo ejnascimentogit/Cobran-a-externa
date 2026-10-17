@@ -111,6 +111,12 @@ As policies e o gatilho entram pelo padrão do projeto (seção abaixo).
 
 Ainda não se sabe se `tb02_papel` tem restrição de valores (se aceita `'cobrador'`).
 
+## `tb04_cliente` e `int02_erp` (colunas lidas em 2026-10-17)
+
+- **`tb04_cliente`:** `tb04_id`, `tb04_empresa_id`, `tb04_codigo` (integer, provável código do cliente no ERP), `tb04_nome`, `tb04_fantasia`, `tb04_cnpj`, `tb04_plpag` (plano de pagamento), `tb04_cobranca` (text), `tb04_praca` (integer, praça do ERP), `tb04_rca` e `tb04_rca2` (vendedores do ERP), `tb04_bloqueio` (text), `tb04_excluido_em` (date, exclusão lógica), `tb04_sincronizado_em` (not null: o cadastro vem de uma sincronização com o ERP), `tb04_criado_em`, `tb04_atualizado_em`. **Não tem endereço, telefone, latitude nem longitude**, e não tem `tb04_uuid`.
+- **`int02_erp`:** conexão com o ERP de cada empresa: `int02_id`, `int02_empresa_id`, `int02_tipo_erp`, `int02_tipo_banco`, `int02_host`, `int02_porta`, `int02_servico`, `int02_tipo_servico`, `int02_usuario`, `int02_senha`, `int02_owner`, `int02_ativo`, `int02_criado_em`, `int02_atualizado_em`.
+- **Leitura:** o devedor da cobrança é o `tb04_cliente` (já sincronizado com o ERP; `tb04_praca` responde ao ponto em aberto "as rotas seguem as praças do ERP?"). Faltam endereço, telefone e coordenadas, que dependem da integração (Ryan). O motoqueiro não tem `empresa_id` no token e **não lê `tb04_cliente`**: por isso `cob06_rota_parada` guarda uma cópia dos dados do cliente no momento da montagem da rota, como o "espelho do pedido" do e-commerce.
+
 ## Decisão: login do motoqueiro separado do e-commerce (2026-10-17)
 
 - `tb02_papel` só aceita `'empresa_admin'` e `'vendedor'` (restrição `tb02_usuario_tb02_papel_check`); `'cobrador'` exigiria alterar tabela existente.
