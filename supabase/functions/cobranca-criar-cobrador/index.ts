@@ -1,4 +1,7 @@
 // Cria o login do motoqueiro e o cadastro em cob01_cobrador.
+// ATENÇÃO: no Supabase (EFR_ecommerce_tirapedidos) esta função foi publicada com o nome `clever-endpoint`
+// (o editor do painel dá um nome aleatório e o nome publicado não muda). Endereço:
+// https://xaicysbwwppqdhktchzy.supabase.co/functions/v1/clever-endpoint
 // Só o administrador da empresa (tb02_papel = 'empresa_admin') pode chamar.
 // O login do motoqueiro NÃO leva empresa_id no app_metadata (decisão do docs/11): sem isso ele
 // não alcança nenhuma tabela do e-commerce; o vínculo com a empresa fica em cob01_cobrador.
