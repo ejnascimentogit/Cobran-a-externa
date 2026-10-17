@@ -27,16 +27,26 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - **Mapa sem sinal:** os blocos de mapa (OpenStreetMap) precisam de internet e **a política deles proíbe baixar em massa para uso offline**. Sem sinal o app mostra a **lista de clientes e as coordenadas**; o mapa só aparece nas áreas já vistas. Mapa offline completo exige provedor pago (ex.: Mapbox) ou app nativo com mapa baixado.
 - **Sessão:** o login expira se ficar muito tempo offline. Eventos já guardados não se perdem, mas só sobem depois de renovar a sessão com internet. Se o acesso do motoqueiro for desativado enquanto ele está offline, os eventos pendentes não sobem (avisar).
 
-## Decisões abertas
+## Decisões (2026-10-17, seguindo as recomendações)
 
-1. **PWA no piloto e app nativo na produção** (recomendado) ou app nativo já?
-2. **Prazo máximo** aceito para sincronizar (sugestão: 72 horas; passando disso, vai para revisão).
-3. **Mapa offline:** lista com coordenadas (grátis) ou mapa baixado por área (provedor pago)?
-4. **Evento suspeito** (hora do aparelho incoerente): gravar marcado para revisão ou recusar?
+1. **PWA no piloto e app nativo (Expo) na produção.** O piloto aceita as limitações acima (tela ligada para rastrear, sincronizar ao abrir o app no iPhone).
+2. **Prazo para sincronizar: 72 horas**, parâmetro `cob11_prazo_sincronizacao_horas` por empresa. Passando disso, o evento é gravado **marcado como suspeito**.
+3. **Sem sinal o app mostra a lista de clientes e as coordenadas.** Mapa offline fica para o app nativo ou para um provedor pago, se necessário.
+4. **Hora do aparelho incoerente (futuro além da tolerância, passado além do prazo, antes do dia da rota ou antes do início): grava marcada** (`*_hora_suspeita`) e usa a hora do servidor, para não perder a visita por um relógio errado. A tolerância é `cob11_tolerancia_relogio_min` (5 minutos).
+
+## Ajuste do banco (`supabase/migrations/20261017020000_cobranca_modo_offline.sql`, a aplicar)
+
+- `cob11_config`: `cob11_prazo_sincronizacao_horas` (72) e `cob11_tolerancia_relogio_min` (5).
+- `cob08_checkin`: `cob08_aparelho_em` (hora do aparelho; `cob08_criado_em` segue sendo a hora em que o servidor recebeu) e `cob08_hora_suspeita`.
+- `cob09_rastreamento`: `cob09_uuid` (único, vem do aparelho), `cob09_aparelho_em` e `cob09_hora_suspeita`.
+- `cob08_validar_checkin()`: recusa evento repetido com `23505` (o app trata como "já recebido"), confere a hora do aparelho e valida "data prometida não pode estar no passado" pela **data do evento**.
+- `cob08_efeitos_checkin()`: início e fim da rota gravam a hora do aparelho.
+- `cob09_forca_hora()` e a policy `cobrador_registra` do rastreamento: o ponto vale se a hora do aparelho está entre o início e o fim da rota (pontos offline podem chegar depois da finalização).
+- Regra para o app: **enviar um evento por vez, na ordem**, e tratar `23505` como sucesso. Pontos de posição podem ir em lotes, mas se um lote falhar o app reenvia ponto a ponto.
 
 ## Ordem de trabalho proposta
 
-1. Decidir os itens acima.
-2. Ajuste do banco (SQL mostrado e aprovado antes, como nas outras tabelas).
+1. ~~Decidir~~ decidido (acima).
+2. Ajuste do banco (SQL mostrado e aprovado antes, como nas outras tabelas): **escrito, a aplicar**.
 3. Ligar o app ao Supabase já com a fila offline e o service worker completo.
 4. Testes com o aparelho em modo avião, antes do piloto.
