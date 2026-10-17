@@ -62,6 +62,7 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 | Tabela | Situação |
 | --- | --- |
 | `cob02_regra` | **Criada em 2026-10-17** por Edimilson no `EFR_ecommerce_tirapedidos`, com o SQL abaixo. **RLS ligada** (`alter table public.cob02_regra enable row level security;`, conferido com `pg_class.relrowsecurity = true`) e **sem policies**, ou seja, fechada para a API pública até as policies serem escritas. |
+| `cob02_regra`: faixas sem sobreposição | **Aplicado em 2026-10-17**: extensão `btree_gist` (schema `extensions`) e restrição de exclusão `cob02_faixas_sem_sobreposicao`. Testado: inserir "3 a 5" e depois "4 a 8" na mesma empresa falha com `23P01`, como esperado. |
 | Demais (`cob01`, `cob03` a `cob11`, `int05`) | Não criadas. |
 
 Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
@@ -84,7 +85,20 @@ create table public.cob02_regra (
 );
 ```
 
-Faltam: policies no padrão do projeto, gatilho de `cob02_atualizado_em` e a regra de que **faixas ativas de uma empresa não se sobrepõem** (restrição de exclusão com a extensão `btree_gist`, só entra com aprovação).
+Restrição aplicada depois (faixas ativas de uma empresa não se sobrepõem):
+
+```sql
+create extension if not exists btree_gist with schema extensions;
+
+alter table public.cob02_regra
+  add constraint cob02_faixas_sem_sobreposicao
+  exclude using gist (
+    cob02_empresa_id with =,
+    int4range(cob02_dias_min, cob02_dias_max, '[]') with &&
+  ) where (cob02_ativo);
+```
+
+Faltam: policies no padrão do projeto e gatilho de `cob02_atualizado_em`.
 
 ## Pendências para fechar o padrão
 
