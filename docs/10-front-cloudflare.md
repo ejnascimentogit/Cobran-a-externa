@@ -43,7 +43,7 @@ Endereços: painel em `/` e app do motoqueiro em `/motoqueiro/`.
 
 Só dois módulos de `apps/compartilhado/` falam com os dados: `store.js` (leitura, assinatura) e `servico.js` (gravações e regras). As telas usam `useEstado()` e as funções de `servico.js`. Para ligar o banco:
 
-1. Aplicar as migrations (schema, RLS, views do [modelo de dados](05-modelo-de-dados.md)) no projeto Supabase confirmado.
+1. Aplicar as migrations (schema, RLS, views do [modelo de dados](05-modelo-de-dados.md)) no projeto Supabase confirmado, seguindo o padrão de nomes de [banco de dados e padrão](11-banco-de-dados-padrao.md) (grupo `cob`, colunas com o prefixo da tabela).
 2. Reescrever `store.js` para carregar as tabelas e assinar o Realtime (`checkins`, `rastreamento`, `rotas`) e `servico.js` para gravar via Supabase. As regras 3, 4, 5 e 7 devem ir também para o banco (triggers/RLS): o front só avisa, o banco garante.
 3. Trocar a escolha de motoqueiro por login (Supabase Auth, perfis `analista`, `cobrador`, `gestor`) e hospedar painel e app em origens separadas, se quiser.
 4. `clientes_cache` e `titulos_cache` vêm da integração do ERP (Ryan); `simularBaixa` e os dados de `dados.js` saem.
