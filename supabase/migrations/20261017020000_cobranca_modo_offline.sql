@@ -1,4 +1,4 @@
--- Cobrança Externa: ajustes do banco para o app do motoqueiro funcionar SEM SINAL (A APLICAR).
+-- Cobrança Externa: ajustes do banco para o app do motoqueiro funcionar SEM SINAL (APLICADO em 2026-10-17 e conferido).
 -- Desenho e decisões: docs/12-modo-offline.md.
 -- Regra do app: enviar os eventos UM POR VEZ, na ordem em que aconteceram (início, visitas, fim).
 -- Uma inserção de várias linhas de uma vez não enxerga o efeito das linhas anteriores (gatilhos "depois").

@@ -76,6 +76,10 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 
 O estado final aplicado está em `supabase/migrations/20261017000000_cobranca_estado_aplicado.sql` (registro, **não rodar de novo** no mesmo banco).
 
+## Modo offline: ajuste do banco aplicado (2026-10-17)
+
+Aplicado e conferido (7 colunas, 3 funções com a hora do aparelho e a policy `cobrador_registra` do rastreamento por hora do aparelho): `cob11_prazo_sincronizacao_horas` (72) e `cob11_tolerancia_relogio_min` (5) em `cob11_config`; `cob08_aparelho_em` e `cob08_hora_suspeita` em `cob08_checkin`; `cob09_uuid` (único), `cob09_aparelho_em` e `cob09_hora_suspeita` em `cob09_rastreamento`. `cob08_validar_checkin()` recusa evento repetido com `23505`, confere a hora do aparelho e valida a data prometida pela data do evento; `cob08_efeitos_checkin()` grava início e fim com a hora do aparelho; `cob09_forca_hora()` verifica a hora do ponto. Detalhes em [docs/12](12-modo-offline.md). **Ainda não testado com dados reais.**
+
 ## Realtime e peças de servidor (2026-10-17)
 
 - **Realtime aplicado e conferido:** `cob04_rota`, `cob08_checkin` e `cob09_rastreamento` estão na publicação `supabase_realtime` (cada usuário só recebe o que a RLS deixa ver).

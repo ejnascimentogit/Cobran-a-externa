@@ -34,7 +34,7 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 3. **Sem sinal o app mostra a lista de clientes e as coordenadas.** Mapa offline fica para o app nativo ou para um provedor pago, se necessário.
 4. **Hora do aparelho incoerente (futuro além da tolerância, passado além do prazo, antes do dia da rota ou antes do início): grava marcada** (`*_hora_suspeita`) e usa a hora do servidor, para não perder a visita por um relógio errado. A tolerância é `cob11_tolerancia_relogio_min` (5 minutos).
 
-## Ajuste do banco (`supabase/migrations/20261017020000_cobranca_modo_offline.sql`, a aplicar)
+## Ajuste do banco (`supabase/migrations/20261017020000_cobranca_modo_offline.sql`, **aplicado e conferido em 2026-10-17**)
 
 - `cob11_config`: `cob11_prazo_sincronizacao_horas` (72) e `cob11_tolerancia_relogio_min` (5).
 - `cob08_checkin`: `cob08_aparelho_em` (hora do aparelho; `cob08_criado_em` segue sendo a hora em que o servidor recebeu) e `cob08_hora_suspeita`.
@@ -43,6 +43,12 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - `cob08_efeitos_checkin()`: início e fim da rota gravam a hora do aparelho.
 - `cob09_forca_hora()` e a policy `cobrador_registra` do rastreamento: o ponto vale se a hora do aparelho está entre o início e o fim da rota (pontos offline podem chegar depois da finalização).
 - Regra para o app: **enviar um evento por vez, na ordem**, e tratar `23505` como sucesso. Pontos de posição podem ir em lotes, mas se um lote falhar o app reenvia ponto a ponto.
+
+## O que já está feito no front (2026-10-17)
+
+- **`apps/compartilhado/fila.js`**: fila de eventos para o app (início, visita, finalização, posição). Sobe um por vez, na ordem; falta de sinal para e retoma sem gastar tentativa; evento já recebido não duplica; evento recusado fica marcado com o motivo (início recusado para tudo, visita recusada não trava as outras); `reenviar` e `descartar`; sem duas sincronizações ao mesmo tempo; com muito tempo offline descarta só os pontos de posição mais antigos; guarda a hora do aparelho do momento da ação. **11 testes** (`npm test`). Ainda **não está ligada ao app**: depende da ligação com o Supabase.
+- **`apps/motoqueiro/public/sw.js` (v2)**: o app abre sem sinal (arquivos do app do cache, páginas com rede primeiro). **Testado no navegador**: abriu com a rede cortada e o app funcionou (com os dados locais da demonstração). Precisa ter sido aberto uma vez com sinal.
+- Falta: baixar a rota com sinal para o aparelho, ligar a fila ao Supabase (um `enviar` que insere em `cob08_checkin` e `cob09_rastreamento` e converte `23505` em sucesso) e o contador "N pendentes" na tela.
 
 ## Ordem de trabalho proposta
 
