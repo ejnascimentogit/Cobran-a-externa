@@ -13,3 +13,7 @@ Sistema de cobrança presencial de inadimplência por rota (motoqueiros). A espe
 
 - Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) — migrations em `supabase/migrations/`
 - Painel web em `apps/painel/`, app do motoqueiro em `apps/motoqueiro/`
+
+## Estado do front (demonstração)
+
+Painel (`apps/painel/`), app do motoqueiro (`apps/motoqueiro/`) e regras de negócio com testes (`apps/compartilhado/`) existem em modo demonstração, com dados fictícios no `localStorage`; publicam no Cloudflare como um só site (`wrangler.jsonc`, `npm run build`). Detalhes e como trocar pelo Supabase em `docs/10-front-cloudflare.md`. O banco será o projeto Supabase `EFR_ecommerce_tirapedidos`, no padrão de nomes dele (grupo `cob`, colunas com o prefixo da tabela, ex.: `cob02_nome`); detalhes, decisões e pendências em `docs/11-banco-de-dados-padrao.md`. O ambiente do Claude não acessa esse projeto: o SQL é escrito e mostrado por escrito, e quem aplica é o Edimilson ou o Ryan. Nunca aplicar nada sem "pode aplicar" explícito e nunca em `painel-workspaces`, `admfullcontrolefinanceiro` ou `data-platform`.
