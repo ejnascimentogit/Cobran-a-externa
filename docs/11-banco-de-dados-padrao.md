@@ -65,7 +65,8 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 | `cob02_regra`: faixas sem sobreposição | **Aplicado em 2026-10-17**: extensão `btree_gist` (schema `extensions`) e restrição de exclusão `cob02_faixas_sem_sobreposicao`. Testado: inserir "3 a 5" e depois "4 a 8" na mesma empresa falha com `23P01`, como esperado. |
 | `cob02_regra`: isolamento por empresa e gatilho | **Aplicado em 2026-10-17**: `select public.aplicar_isolamento('public.cob02_regra', 'cob02_empresa_id');` (policy `isolamento_empresa`, conferida em `pg_policies`) e gatilho `cob02_regra_atualizado_em` (conferido em `pg_trigger`). **A tabela está pronta.** A conferência de `relforcerowsecurity` ainda não foi enviada, mas a função liga os dois. |
 | `cob03_motivo` | **Criada em 2026-10-17** com a receita do projeto: colunas `cob03_id`, `cob03_uuid`, `cob03_empresa_id`, `cob03_nome`, `cob03_tipo` (`pago`, `promessa`, `negociado`, `sem_sucesso`), `cob03_ativo`, `cob03_criado_em`, `cob03_atualizado_em`; nome único por empresa (`cob03_nome_unico`); `aplicar_isolamento` e gatilho `cob03_motivo_atualizado_em`. Conferido: policy `isolamento_empresa`, gatilho e RLS/RLS forçada `true / true`. **Os 8 motivos iniciais** (de `docs/03-regras-de-negocio.md`) foram cadastrados em 2026-10-17 para a empresa `tb01_id = 1` (Comal). |
-| Demais (`cob01`, `cob04` a `cob11`, `int05`) | Não criadas. |
+| `cob01_cobrador` | **Criada e corrigida em 2026-10-17** (opção C, login separado). Colunas: `cob01_id`, `cob01_uuid`, `cob01_empresa_id`, `cob01_auth_id` (único, ligado a `auth.users`, `on delete cascade`), `cob01_nome`, `cob01_email` (formato, minúsculas e único por empresa), `cob01_telefone`, `cob01_veiculo`, `cob01_capacidade` (padrão 8), `cob01_consentimento_em`, `cob01_ativo`, `cob01_criado_em`, `cob01_atualizado_em`. Criada primeiro com `cob01_usuario_id` (ligação a `tb02_usuario`) e ajustada por `alter table` porque estava vazia. Conferido: policies `isolamento_empresa` e `cobrador_le_proprio`, gatilho `cob01_cobrador_atualizado_em`, RLS/RLS forçada `true / true`. Sem linhas. |
+| Demais (`cob04` a `cob11`, `int05`) | Não criadas. |
 
 Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
 
@@ -108,6 +109,17 @@ As policies e o gatilho entram pelo padrão do projeto (seção abaixo).
 
 Ainda não se sabe se `tb02_papel` tem restrição de valores (se aceita `'cobrador'`).
 
+## Decisão: login do motoqueiro separado do e-commerce (2026-10-17)
+
+- `tb02_papel` só aceita `'empresa_admin'` e `'vendedor'` (restrição `tb02_usuario_tb02_papel_check`); `'cobrador'` exigiria alterar tabela existente.
+- As tabelas do e-commerce filtram só por empresa (`isolamento_empresa`): quem tem `empresa_id` no token lê e grava tudo da empresa pela API.
+- **Decisão (Edimilson):** o motoqueiro tem **login próprio, fora de `tb02_usuario`**, ligado a `cob01_cobrador.cob01_auth_id`.
+  - Ao criar o usuário no Supabase Auth, **não colocar `empresa_id` no `app_metadata`**: sem ele, `empresa_atual()` fica nula e o motoqueiro não alcança nenhuma tabela do e-commerce.
+  - O analista usa o login normal da empresa e enxerga tudo da cobrança pela policy `isolamento_empresa`.
+  - O motoqueiro lê só o próprio cadastro (`cobrador_le_proprio`). Nas tabelas de rota, parada e check-in ele ganha policies próprias, por `auth.uid()`, criadas junto com cada tabela (ou depois, quando a tabela de ligação existir).
+  - O aceite da localização (`cob01_consentimento_em`) será gravado por uma função, não por `update` direto.
+  - Quem cria o login do motoqueiro será uma Edge Function (a escrever), com chave de servidor.
+
 ## Segurança e gatilho: padrão do projeto
 
 Lido das tabelas `tb01_empresa`, `tb02_usuario`, `tb04_cliente` e das funções do schema `public`.
@@ -140,7 +152,7 @@ Para testar no SQL Editor lembre que `empresa_atual()` lê `app.empresa_id` na s
 1. ~~Coluna da empresa~~ resolvido: `<prefixo>_empresa_id`.
 2. Tipo real de `tb01_id` (`integer` ou `bigint`): `cob02_id` foi criada como `integer`; conferir se as chaves do projeto são `integer` antes de criar tabelas que apontam para elas.
 3. ~~Gatilho de `_atualizado_em`~~ resolvido: `tocar_atualizado_em`.
-4. ~~RLS do projeto~~ resolvido para tabelas de negócio. **Em aberto:** como o motoqueiro (que grava check-in) entra no token com `empresa_id`, e se o app dele usa um papel `agente_N` ou login de usuário.
+4. ~~RLS do projeto e login do motoqueiro~~ resolvido (ver a decisão acima). **Em aberto:** a Edge Function que cria o login do motoqueiro e a função que grava o aceite da localização.
 5. Devedor: `tb04_cliente` ou tabela nova no grupo `int`.
 6. Número e nome das tabelas de cache do ERP.
 7. Prefixo das colunas das tabelas filhas: em `tb06_pedido_item` o gatilho usa `tb06_item_atualizado_em` (prefixo `tb06_item_`). Decidir se `cob05_rota_cobrador` usa `cob05_` (adotado até agora).
