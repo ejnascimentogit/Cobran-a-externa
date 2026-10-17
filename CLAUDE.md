@@ -1,0 +1,15 @@
+# Cobrança Externa — contexto para o Claude
+
+Sistema de cobrança presencial de inadimplência por rota (motoqueiros). A especificação completa está em `docs/`; leia `docs/02-requisitos-funcionais.md` e `docs/05-modelo-de-dados.md` antes de implementar.
+
+## Regras de trabalho
+
+- Idioma: português (código pode usar nomes em português, como no modelo de dados).
+- Antes de qualquer mudança que altere um fluxo já existente, perguntar e esperar aprovação.
+- A integração com o ERP (WinThor/Oracle) é do Ryan. Não implementar conexão com o ERP; usar dados de teste em `clientes_cache` e `titulos_cache`.
+- O ERP é somente leitura: nada neste repositório grava no WinThor.
+
+## Stack
+
+- Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) — migrations em `supabase/migrations/`
+- Painel web em `apps/painel/`, app do motoqueiro em `apps/motoqueiro/`
