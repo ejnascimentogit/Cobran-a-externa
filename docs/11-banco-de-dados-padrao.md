@@ -57,7 +57,16 @@ Na cobrança vale o mesmo: `cob02_id`, `cob02_uuid`, `cob02_nome`, `cob02_ativo`
 - **Empresa e login:** `tb01_empresa` e `tb02_usuario`.
 - **ERP:** `int02_erp` já existe; a carga é do Ryan (ver [integração](06-integracao-erp.md)). O ERP continua somente leitura.
 
-## Rascunho: `cob02_regra` (NÃO aplicado)
+## Estado do banco
+
+| Tabela | Situação |
+| --- | --- |
+| `cob02_regra` | **Criada em 2026-10-17** por Edimilson no `EFR_ecommerce_tirapedidos`, com o SQL abaixo. **RLS ligada** (`alter table public.cob02_regra enable row level security;`, conferido com `pg_class.relrowsecurity = true`) e **sem policies**, ou seja, fechada para a API pública até as policies serem escritas. |
+| Demais (`cob01`, `cob03` a `cob11`, `int05`) | Não criadas. |
+
+Regra para toda tabela nova: **ligar a RLS no mesmo momento da criação**. No Supabase, tabela nova em `public` fica aberta à chave publishable até a RLS ser ligada.
+
+## `cob02_regra`: SQL aplicado
 
 ```sql
 create table public.cob02_regra (
@@ -75,7 +84,7 @@ create table public.cob02_regra (
 );
 ```
 
-Faltam: RLS no padrão do projeto, gatilho de `cob02_atualizado_em` e a regra de que **faixas ativas de uma empresa não se sobrepõem** (restrição de exclusão com a extensão `btree_gist`, só entra com aprovação).
+Faltam: policies no padrão do projeto, gatilho de `cob02_atualizado_em` e a regra de que **faixas ativas de uma empresa não se sobrepõem** (restrição de exclusão com a extensão `btree_gist`, só entra com aprovação).
 
 ## Pendências para fechar o padrão
 
