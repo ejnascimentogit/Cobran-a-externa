@@ -1,4 +1,4 @@
--- Cobrança Externa: Realtime (já aplicado em 2026-10-17) e funções do aceite da localização (A APLICAR).
+-- Cobrança Externa: Realtime e funções do aceite da localização (APLICADOS em 2026-10-17 e conferidos).
 -- Decisões: docs/11-banco-de-dados-padrao.md.
 
 -- 1) Realtime do mapa ao vivo (aplicado; respeita a RLS de cada usuário)
