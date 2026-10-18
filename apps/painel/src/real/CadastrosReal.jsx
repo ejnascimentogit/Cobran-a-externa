@@ -58,7 +58,7 @@ function Motoqueiros() {
         </tbody>
       </table></div>
       <h3 style={{ marginTop: '1rem' }}>Novo motoqueiro</h3>
-      <p className="suave">Só o administrador da empresa consegue criar. O login nasce sem acesso aos dados do e-commerce.</p>
+      <p className="suave">Só o administrador da empresa consegue criar. O motoqueiro entra no app com este e-mail e a senha provisória, e escolhe a própria senha no primeiro acesso.</p>
       <div className="grade" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <label>Nome<input {...campo('nome')} /></label>
         <label>E-mail<input type="email" {...campo('email')} /></label>
