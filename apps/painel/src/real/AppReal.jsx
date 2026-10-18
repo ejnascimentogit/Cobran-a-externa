@@ -43,9 +43,37 @@ function Entrar() {
   );
 }
 
+function TrocarSenha({ onFechar }) {
+  const [a, setA] = useState('');
+  const [b, setB] = useState('');
+  const [msg, setMsg] = useState({ tipo: '', texto: '' });
+  const salvar = async e => {
+    e.preventDefault();
+    if (a.length < 8) return setMsg({ tipo: 'erro', texto: 'A senha precisa ter pelo menos 8 caracteres.' });
+    if (a !== b) return setMsg({ tipo: 'erro', texto: 'As duas senhas não são iguais.' });
+    const { error } = await supabase.auth.updateUser({ password: a });
+    if (error) return setMsg({ tipo: 'erro', texto: 'Não consegui trocar a senha. Tente de novo.' });
+    setMsg({ tipo: 'ok', texto: 'Senha trocada.' });
+    setA('');
+    setB('');
+  };
+  return (
+    <div className="card" style={{ maxWidth: 460 }}>
+      <h2>Trocar senha</h2>
+      <form onSubmit={salvar}>
+        {msg.texto && <div className={msg.tipo}>{msg.texto}</div>}
+        <label>Nova senha<input type="password" autoComplete="new-password" value={a} onChange={e => setA(e.target.value)} /></label>
+        <label>Repita a senha<input type="password" autoComplete="new-password" value={b} onChange={e => setB(e.target.value)} /></label>
+        <div className="linha-acoes"><button className="principal">Salvar senha</button><button type="button" onClick={onFechar}>Fechar</button></div>
+      </form>
+    </div>
+  );
+}
+
 export default function AppReal() {
   const { carregando, sessao } = useSessao();
   const [aba, setAba] = useState('aovivo');
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
   if (carregando) return <main><div className="card">Carregando…</div></main>;
   if (!sessao) return <Entrar />;
 
@@ -59,12 +87,14 @@ export default function AppReal() {
         <h1>Cobrança Externa · Painel do analista</h1>
         <span className="espaco" />
         <span style={{ fontSize: '.85rem', opacity: .85 }}>{usuario.email}</span>
+        <button onClick={() => setTrocandoSenha(v => !v)}>Trocar senha</button>
         <button onClick={() => supabase.auth.signOut()}>Sair</button>
       </header>
       <nav className="abas">
         {ABAS.map(([id, nome]) => <button key={id} className={id === aba ? 'ativa' : ''} onClick={() => setAba(id)}>{nome}</button>)}
       </nav>
       <main>
+        {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
         {!Number.isInteger(empresaId)
           ? <div className="erro">Este login não está ligado a uma empresa (falta o <code>empresa_id</code> no acesso). Peça ao administrador.</div>
           : <Tela empresaId={empresaId} usuario={usuario} />}

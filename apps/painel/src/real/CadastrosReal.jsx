@@ -18,10 +18,20 @@ function Motoqueiros() {
     setMsg('');
     setNova(null);
     setOcupado(true);
+    // renova o acesso antes de chamar (a sessão dura cerca de 1 hora e a aba pode ter ficado parada)
+    const { data: renovada } = await supabase.auth.refreshSession();
+    if (!renovada?.session) {
+      setOcupado(false);
+      await supabase.auth.signOut();
+      return;
+    }
     const { data, error } = await supabase.functions.invoke(FUNCAO_CRIAR_COBRADOR, { body: f });
     setOcupado(false);
     if (error) return setMsg('Não consegui chamar a função que cria o motoqueiro. Confira se ela está publicada.');
-    if (!data?.ok) return setMsg(data?.erro || 'Não consegui criar.');
+    if (!data?.ok) {
+      if (/sessão inválida/i.test(data?.erro || '')) { await supabase.auth.signOut(); return; } // volta para a tela de login
+      return setMsg(data?.erro || 'Não consegui criar.');
+    }
     setNova({ nome: data.cobrador.cob01_nome, email: data.cobrador.cob01_email, senha: data.senha_provisoria });
     setF({ nome: '', email: '', telefone: '', veiculo: '', capacidade: 8 });
     recarregar();
@@ -58,7 +68,7 @@ function Motoqueiros() {
         </tbody>
       </table></div>
       <h3 style={{ marginTop: '1rem' }}>Novo motoqueiro</h3>
-      <p className="suave">Só o administrador da empresa consegue criar. O login nasce sem acesso aos dados do e-commerce.</p>
+      <p className="suave">Só o administrador da empresa consegue criar. O motoqueiro entra no app com este e-mail e a senha provisória, e escolhe a própria senha no primeiro acesso.</p>
       <div className="grade" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <label>Nome<input {...campo('nome')} /></label>
         <label>E-mail<input type="email" {...campo('email')} /></label>

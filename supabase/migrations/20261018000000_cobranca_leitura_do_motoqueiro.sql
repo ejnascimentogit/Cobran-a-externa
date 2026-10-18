@@ -1,6 +1,6 @@
 -- Cobrança Externa: o app do motoqueiro (modo real) precisa LER a lista de motivos e o raio de GPS da
 -- própria empresa. O login dele não tem empresa_id no token, então a policy padrão (isolamento_empresa)
--- não deixa. Estas policies liberam só leitura, só para motoqueiro ativo, só da empresa dele. (A APLICAR)
+-- não deixa. Estas policies liberam só leitura, só para motoqueiro ativo, só da empresa dele. (APLICADO em 2026-10-18 e conferido em pg_policies)
 
 create policy cobrador_le_motivos on public.cob03_motivo
   for select

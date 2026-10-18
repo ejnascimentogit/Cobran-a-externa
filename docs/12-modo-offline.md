@@ -56,7 +56,7 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - **Telas:** entrar (e-mail e senha), trocar a senha provisória (`user_metadata.trocar_senha`), aceite da localização (função `cob01_aceitar_localizacao`), rota do dia, check-in e finalização. Cabeçalho com "Com sinal"/"Sem sinal", contador de pendentes, "Enviar agora" e a lista de eventos recusados com "Tentar de novo" e "Descartar".
 - **Offline:** início, visitas, finalização e a posição (a cada 45 s com a rota em andamento) entram na fila (`fila.js`) e sobem na ordem, um por vez, quando o sinal volta, ao reabrir o app e a cada minuto (`apps/compartilhado/real/envio.js`: o id do evento vira o `uuid` da linha; `23505` conta como já recebido; sem sinal, 5xx e login vencido tentam de novo sem marcar erro). As regras do check-in são conferidas no aparelho (`apps/compartilhado/real/validacao.js`) para o aviso aparecer na hora; o banco confere de novo.
 - **Rota e motivos ficam no aparelho** (`localStorage`) depois de carregados com sinal. Sem sinal e sem rota guardada o app avisa.
-- **Leitura que faltava no banco:** o motoqueiro não tem `empresa_id` no token e não lia `cob03_motivo` nem `cob11_config`. `supabase/migrations/20261018000000_cobranca_leitura_do_motoqueiro.sql` (**a aplicar**) cria `cobrador_le_motivos` e `cobrador_le_config`.
+- **Leitura que faltava no banco:** o motoqueiro não tem `empresa_id` no token e não lia `cob03_motivo` nem `cob11_config`. `supabase/migrations/20261018000000_cobranca_leitura_do_motoqueiro.sql` (**aplicado e conferido em 2026-10-18**) cria `cobrador_le_motivos` e `cobrador_le_config`.
 - **Dados de teste:** `supabase/testes/dados-de-teste-motoqueiro.sql` (regra, motoqueiro e uma rota enviada com 2 clientes), para rodar bloco a bloco.
 - **Testado:** 13 testes de regras e envio (`npm test`) e o fluxo completo no navegador contra um **Supabase simulado** (login, troca de senha, aceite, rota, início/visitas/fim sem sinal, recarregar sem sinal com a fila intacta, sincronização ao voltar o sinal, rota finalizada). **Não foi testado contra o banco real**: o ambiente do Claude não alcança o Supabase (rede bloqueada).
 - **Limites:** o painel ainda não está no modo real; criar motoqueiro pelo painel (Edge Function) depende do painel e de um administrador da empresa; sem títulos do ERP não há como montar rota pelo painel.
@@ -67,6 +67,12 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - **Telas:** **Acompanhamento ao vivo** (rota, mapa com a trilha e a posição do motoqueiro, relatório por cliente, totais por motoqueiro e por motivo, com marca de "fora do raio" e "hora suspeita"; atualiza por Realtime e a cada 20 s), **Rotas** (lista e "Enviar ao app" das em rascunho), **Regras de cobrança** (cria, edita, ativa; sobreposição é recusada pelo banco com mensagem em português) e **Cadastros** (motoqueiros, criados pela Edge Function `clever-endpoint` com a senha provisória mostrada uma única vez; motivos; parâmetros de `cob11_config`).
 - **Montar rota fica de fora:** a carteira (inadimplentes por faixa) depende dos títulos do ERP, ainda sem tabela. Enquanto isso, rotas de teste por SQL (`supabase/testes/dados-de-teste-motoqueiro.sql`).
 - **Testado:** `apps/compartilhado/real/resumo.js` (2 testes) e o fluxo no navegador contra o **Supabase simulado** (login, ao vivo, enviar rota, regra com e sem sobreposição, criar motoqueiro). **Não testado contra o banco real.**
+
+## Primeira validação no banco real (2026-10-18)
+
+- **Painel real:** login com `edimilson@efr.com` (senha definida por ele para a cobrança) abriu as quatro abas e leu a empresa 1.
+- **Criar motoqueiro pelo painel** (Cadastros → Novo motoqueiro, função `clever-endpoint`): criou o login e o cadastro `cob01_cobrador` do motoqueiro ROSTAN, e a lista o mostrou de volta. A senha provisória foi exibida uma vez.
+- **Ainda não validado no banco real:** o app do motoqueiro (login, troca da senha provisória, aceite da localização, rota, check-in, fila offline), a criação de rota (dados de teste por SQL) e o acompanhamento ao vivo com dados.
 
 ## Ordem de trabalho proposta
 

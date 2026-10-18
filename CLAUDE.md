@@ -9,6 +9,12 @@ Sistema de cobrança presencial de inadimplência por rota (motoqueiros). A espe
 - A integração com o ERP (WinThor/Oracle) é do Ryan. Não implementar conexão com o ERP; usar dados de teste em `clientes_cache` e `titulos_cache`.
 - O ERP é somente leitura: nada neste repositório grava no WinThor.
 
+## Quem é quem (decisão do Edimilson, 2026-10-18)
+
+- A **Cobrança Externa é um produto próprio, que está sendo vendido**. Não é o e-commerce. Os acessos ao painel e ao app da cobrança são **da cobrança**: nunca chamar de "login do e-commerce" nem pedir a "senha do e-commerce".
+- Para conversar e documentar, usar "projeto de cobrança". O projeto Supabase `EFR_ecommerce_tirapedidos` só **hospeda** o banco (compartilhado com outros sistemas, por enquanto).
+- Os logins `edimilson@efr.com` e `ryan@efr.com` existem no Supabase, mas **não têm senha definida para a cobrança**: cada um define a própria (ver `docs/11`). Senhas nunca vão para o chat, o repositório ou o código.
+
 ## Stack
 
 - Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) — migrations em `supabase/migrations/`
