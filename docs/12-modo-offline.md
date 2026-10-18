@@ -61,6 +61,13 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - **Testado:** 13 testes de regras e envio (`npm test`) e o fluxo completo no navegador contra um **Supabase simulado** (login, troca de senha, aceite, rota, início/visitas/fim sem sinal, recarregar sem sinal com a fila intacta, sincronização ao voltar o sinal, rota finalizada). **Não foi testado contra o banco real**: o ambiente do Claude não alcança o Supabase (rede bloqueada).
 - **Limites:** o painel ainda não está no modo real; criar motoqueiro pelo painel (Edge Function) depende do painel e de um administrador da empresa; sem títulos do ERP não há como montar rota pelo painel.
 
+## Painel em modo real (2026-10-18)
+
+- **Como ligar:** abrir `/?real=1` (fica lembrado; `?demo=1` volta à demonstração). Entra com o login do painel da empresa (o token precisa ter `empresa_id`; conferido que o administrador e o vendedor da empresa 1 têm).
+- **Telas:** **Acompanhamento ao vivo** (rota, mapa com a trilha e a posição do motoqueiro, relatório por cliente, totais por motoqueiro e por motivo, com marca de "fora do raio" e "hora suspeita"; atualiza por Realtime e a cada 20 s), **Rotas** (lista e "Enviar ao app" das em rascunho), **Regras de cobrança** (cria, edita, ativa; sobreposição é recusada pelo banco com mensagem em português) e **Cadastros** (motoqueiros, criados pela Edge Function `clever-endpoint` com a senha provisória mostrada uma única vez; motivos; parâmetros de `cob11_config`).
+- **Montar rota fica de fora:** a carteira (inadimplentes por faixa) depende dos títulos do ERP, ainda sem tabela. Enquanto isso, rotas de teste por SQL (`supabase/testes/dados-de-teste-motoqueiro.sql`).
+- **Testado:** `apps/compartilhado/real/resumo.js` (2 testes) e o fluxo no navegador contra o **Supabase simulado** (login, ao vivo, enviar rota, regra com e sem sobreposição, criar motoqueiro). **Não testado contra o banco real.**
+
 ## Ordem de trabalho proposta
 
 1. ~~Decidir~~ decidido (acima).

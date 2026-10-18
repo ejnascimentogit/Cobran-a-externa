@@ -120,3 +120,39 @@ test('exceção do envio conta como falta de sinal', async () => {
   const enviar = criarEnviar(fake([new Error('fetch failed')]));
   assert.deepEqual(await enviar({ id: 'a', tipo: 'visita', aparelhoEm: 'x', dados: {} }), { ok: false, rede: true });
 });
+
+// ---- resumo do acompanhamento ----
+import { resumirRota, mensagemDeErro } from '../real/resumo.js';
+
+test('resumo da rota: totais, por motoqueiro e por motivo a partir das linhas do banco', () => {
+  const r = resumirRota({
+    agora: new Date('2026-10-20T12:00:00Z'),
+    cobradores: [{ cob01_id: 1, cob01_nome: 'Carlos' }],
+    motivos: [{ cob03_id: 1, cob03_nome: 'Pagou no ato' }, { cob03_id: 4, cob03_nome: 'Cliente ausente' }],
+    paradas: [
+      { cob06_id: 11, cob06_ordem: 2, cob06_cobrador_id: 1, cob06_valor_total: '500.00', cob06_qtd_titulos: 1, cob06_previsao_chegada: '2026-10-20T13:00:00Z' },
+      { cob06_id: 10, cob06_ordem: 1, cob06_cobrador_id: 1, cob06_valor_total: 1000, cob06_qtd_titulos: 2, cob06_previsao_chegada: '2026-10-20T11:00:00Z' },
+    ],
+    checkins: [
+      { cob08_tipo: 'inicio' },
+      { cob08_tipo: 'visita', cob08_parada_id: 10, cob08_motivo_id: 1, cob08_resultado: 'pago_na_visita', cob08_valor_recebido: 1000, cob08_valor_negociado: 0 },
+    ],
+  });
+  assert.equal(r.clientes, 2);
+  assert.equal(r.titulos, 3);
+  assert.equal(r.valorTotal, 1500);
+  assert.equal(r.visitados, 1);
+  assert.equal(r.recebido, 1000);
+  assert.equal(r.previstoAteAgora, 1);
+  assert.deepEqual(r.linhas.map(l => [l.parada.cob06_ordem, l.resultado]), [[1, 'pago_na_visita'], [2, 'pendente']]);
+  assert.deepEqual(r.porCobrador, [{ nome: 'Carlos', clientes: 2, titulos: 3, valor: 1500, visitados: 1, recebido: 1000, negociado: 0 }]);
+  assert.deepEqual(r.porMotivo, [{ descricao: 'Pagou no ato', qtd: 1, valor: 1000 }]);
+});
+
+test('mensagens de erro do banco em português', () => {
+  assert.match(mensagemDeErro({ code: '23P01', message: 'x' }), /se sobrepõe/);
+  assert.match(mensagemDeErro({ code: '23505', message: 'x' }), /Já existe/);
+  assert.match(mensagemDeErro({ code: '42501', message: 'x' }), /Sem permissão/);
+  assert.match(mensagemDeErro(new Error('TypeError: Failed to fetch')), /Sem conexão/);
+  assert.equal(mensagemDeErro({ code: 'P0001', message: 'Mensagem do banco.' }), 'Mensagem do banco.');
+});
