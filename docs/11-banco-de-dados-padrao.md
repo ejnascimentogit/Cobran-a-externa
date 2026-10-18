@@ -142,6 +142,21 @@ Ainda não se sabe se `tb02_papel` tem restrição de valores (se aceita `'cobra
 - Os dois precisam sair e entrar de novo no painel para o acesso novo valer.
 - Observação: a cobrança divide o projeto Supabase com o e-commerce e está em Free/Nano (pausa por inatividade). Por ser um produto que será vendido, avaliar mover para um projeto próprio antes do primeiro cliente pagante.
 
+## Acesso ao painel da cobrança: senhas (2026-10-18)
+
+- A cobrança é um produto próprio (decisão do Edimilson). Os dois administradores (`edimilson@efr.com` e `ryan@efr.com`) **não têm senha definida para a cobrança**; o painel não deve pedir "a senha do e-commerce".
+- **Definir a senha de um administrador** (cada pessoa define a própria, no SQL Editor; a senha digitada fica no histórico do editor, então trocar depois pelo botão **Trocar senha** do painel):
+
+```sql
+update auth.users
+   set encrypted_password = extensions.crypt('ESCOLHA_UMA_SENHA_FORTE', extensions.gen_salt('bf')),
+       updated_at = now()
+ where lower(email) = 'edimilson@efr.com';   -- trocar pelo e-mail de quem está definindo
+```
+
+- O botão **Trocar senha** no cabeçalho do painel real (`supabase.auth.updateUser`) permite a pessoa mudar a senha depois de entrar.
+- "Esqueci minha senha" por e-mail só funciona para todos depois de configurar um SMTP próprio no Supabase (o e-mail padrão só entrega a membros da organização do projeto).
+
 ## Decisão: login do motoqueiro separado do e-commerce (2026-10-17)
 
 - `tb02_papel` só aceita `'empresa_admin'` e `'vendedor'` (restrição `tb02_usuario_tb02_papel_check`); `'cobrador'` exigiria alterar tabela existente.
