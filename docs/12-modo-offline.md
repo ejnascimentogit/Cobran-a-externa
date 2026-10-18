@@ -68,6 +68,12 @@ Hoje o banco **força a hora do servidor** e só aceita gravar com a rota em and
 - **Montar rota fica de fora:** a carteira (inadimplentes por faixa) depende dos títulos do ERP, ainda sem tabela. Enquanto isso, rotas de teste por SQL (`supabase/testes/dados-de-teste-motoqueiro.sql`).
 - **Testado:** `apps/compartilhado/real/resumo.js` (2 testes) e o fluxo no navegador contra o **Supabase simulado** (login, ao vivo, enviar rota, regra com e sem sobreposição, criar motoqueiro). **Não testado contra o banco real.**
 
+## Primeira validação no banco real (2026-10-18)
+
+- **Painel real:** login com `edimilson@efr.com` (senha definida por ele para a cobrança) abriu as quatro abas e leu a empresa 1.
+- **Criar motoqueiro pelo painel** (Cadastros → Novo motoqueiro, função `clever-endpoint`): criou o login e o cadastro `cob01_cobrador` do motoqueiro ROSTAN, e a lista o mostrou de volta. A senha provisória foi exibida uma vez.
+- **Ainda não validado no banco real:** o app do motoqueiro (login, troca da senha provisória, aceite da localização, rota, check-in, fila offline), a criação de rota (dados de teste por SQL) e o acompanhamento ao vivo com dados.
+
 ## Ordem de trabalho proposta
 
 1. ~~Decidir~~ decidido (acima).
