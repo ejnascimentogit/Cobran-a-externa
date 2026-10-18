@@ -133,6 +133,15 @@ Ainda não se sabe se `tb02_papel` tem restrição de valores (se aceita `'cobra
 - **`int02_erp`:** conexão com o ERP de cada empresa: `int02_id`, `int02_empresa_id`, `int02_tipo_erp`, `int02_tipo_banco`, `int02_host`, `int02_porta`, `int02_servico`, `int02_tipo_servico`, `int02_usuario`, `int02_senha`, `int02_owner`, `int02_ativo`, `int02_criado_em`, `int02_atualizado_em`.
 - **Leitura:** o devedor da cobrança é o `tb04_cliente` (já sincronizado com o ERP; `tb04_praca` responde ao ponto em aberto "as rotas seguem as praças do ERP?"). Faltam endereço, telefone e coordenadas, que dependem da integração (Ryan). O motoqueiro não tem `empresa_id` no token e **não lê `tb04_cliente`**: por isso `cob06_rota_parada` guarda uma cópia dos dados do cliente no momento da montagem da rota, como o "espelho do pedido" do e-commerce.
 
+## Administradores da plataforma (2026-10-18)
+
+- `edimilson@efr.com` e `ryan@efr.com` são os donos da plataforma (`app_metadata.role = owner`). Decisão do Edimilson: ficam como **administradores da empresa 1** para operar o painel da cobrança.
+- **Aplicado e conferido** (`ok = true` para os dois): `app_metadata.empresa_id = 1` somado ao `role: owner` (o `owner` foi mantido) e uma linha em `tb02_usuario` com `tb02_empresa_id = 1`, `tb02_papel = empresa_admin`, `tb02_ativo = true`. Antes: só `role: owner`, sem `empresa_id` e sem linha em `tb02_usuario`.
+- Para desfazer: `update auth.users set raw_app_meta_data = raw_app_meta_data - 'empresa_id' where lower(email) in ('edimilson@efr.com','ryan@efr.com');` e apagar as duas linhas de `tb02_usuario` ligadas a esses logins.
+- Os outros dois logins do projeto (`felipe@comal.com`, `lorena@comal.com`) não foram tocados.
+- Os dois precisam sair e entrar de novo no painel para o acesso novo valer.
+- Observação: a cobrança divide o projeto Supabase com o e-commerce e está em Free/Nano (pausa por inatividade). Por ser um produto que será vendido, avaliar mover para um projeto próprio antes do primeiro cliente pagante.
+
 ## Decisão: login do motoqueiro separado do e-commerce (2026-10-17)
 
 - `tb02_papel` só aceita `'empresa_admin'` e `'vendedor'` (restrição `tb02_usuario_tb02_papel_check`); `'cobrador'` exigiria alterar tabela existente.
