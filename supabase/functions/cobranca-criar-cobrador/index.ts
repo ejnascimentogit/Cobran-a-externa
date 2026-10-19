@@ -18,8 +18,8 @@ const json = (corpo: unknown) =>
   new Response(JSON.stringify(corpo), { headers: { ...CORS, "Content-Type": "application/json" } });
 
 // Decisão do Edimilson (2026-10-19): a senha provisória é sempre esta. O login nasce com
-// trocar_senha = true e o app obriga a escolher a senha própria (mínimo 8 caracteres) no primeiro acesso.
-const SENHA_PROVISORIA = "123456";
+// trocar_senha = true e o app obriga a escolher a senha própria (mínimo 8 caracteres e diferente da provisória) no primeiro acesso.
+const SENHA_PROVISORIA = "12345678";
 
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 

@@ -49,7 +49,7 @@ function Motoqueiros() {
       {(erro || msg) && <div className="erro">{msg || erro}</div>}
       {nova && (
         <div className="ok">
-          <b>Login criado para {nova.nome}.</b> Entregue estes dados a ele. A senha provisória é sempre <b>123456</b>; no primeiro acesso o app obriga ele a escolher a própria.
+          <b>Login criado para {nova.nome}.</b> Entregue estes dados a ele. A senha provisória é sempre <b>12345678</b>; no primeiro acesso o app obriga ele a escolher a própria.
           <div style={{ marginTop: '.4rem' }}>E-mail: <code>{nova.email}</code><br />Senha provisória: <code>{nova.senha}</code></div>
         </div>
       )}
@@ -68,7 +68,7 @@ function Motoqueiros() {
         </tbody>
       </table></div>
       <h3 style={{ marginTop: '1rem' }}>Novo motoqueiro</h3>
-      <p className="suave">Só o administrador da empresa consegue criar. O motoqueiro entra no app com este e-mail e a senha provisória 123456, e é obrigado a escolher a própria senha no primeiro acesso.</p>
+      <p className="suave">Só o administrador da empresa consegue criar. O motoqueiro entra no app com este e-mail e a senha provisória 12345678, e é obrigado a escolher a própria senha no primeiro acesso.</p>
       <div className="grade" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <label>Nome<input {...campo('nome')} /></label>
         <label>E-mail<input type="email" {...campo('email')} /></label>
