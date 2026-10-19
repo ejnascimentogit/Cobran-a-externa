@@ -1,4 +1,4 @@
-// Cria o login do motoqueiro e o cadastro em cob01_cobrador.
+// Cria o login do motoqueiro e o cadastro em cob01_cobrador. Com { acao: "redefinir_senha", cobrador_id } gera a senha provisória de novo.
 // ATENÇÃO: no Supabase (EFR_ecommerce_tirapedidos) esta função foi publicada com o nome `clever-endpoint`
 // (o editor do painel dá um nome aleatório e o nome publicado não muda). Endereço:
 // https://xaicysbwwppqdhktchzy.supabase.co/functions/v1/clever-endpoint
@@ -17,11 +17,9 @@ const CORS = {
 const json = (corpo: unknown) =>
   new Response(JSON.stringify(corpo), { headers: { ...CORS, "Content-Type": "application/json" } });
 
-function senhaProvisoria(): string {
-  const alfabeto = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(bytes, (b) => alfabeto[b % alfabeto.length]).join("");
-}
+// Decisão do Edimilson (2026-10-19): a senha provisória é sempre esta. O login nasce com
+// trocar_senha = true e o app obriga a escolher a senha própria (mínimo 8 caracteres e diferente da provisória) no primeiro acesso.
+const SENHA_PROVISORIA = "12345678";
 
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
@@ -50,6 +48,20 @@ Deno.serve(async (req) => {
     if (!adm) return json({ ok: false, erro: "Só o administrador da empresa cria motoqueiros." });
 
     const corpo = await req.json().catch(() => ({}));
+    if (corpo.acao === "redefinir_senha") {
+      // Gerar nova senha: volta para a provisória e obriga a troca no próximo acesso.
+      const { data: cob } = await admin
+        .from("cob01_cobrador").select("cob01_auth_id, cob01_nome")
+        .eq("cob01_id", Number(corpo.cobrador_id)).eq("cob01_empresa_id", empresaId) // só motoqueiro da própria empresa
+        .maybeSingle();
+      if (!cob?.cob01_auth_id) return json({ ok: false, erro: "Motoqueiro não encontrado." });
+      const { error: erroSenha } = await admin.auth.admin.updateUserById(cob.cob01_auth_id, {
+        password: SENHA_PROVISORIA,
+        user_metadata: { nome: cob.cob01_nome, trocar_senha: true },
+      });
+      if (erroSenha) return json({ ok: false, erro: "Não consegui gerar a nova senha." });
+      return json({ ok: true, cobrador: { cob01_nome: cob.cob01_nome }, senha_provisoria: SENHA_PROVISORIA });
+    }
     const nome = texto(corpo.nome, 120);
     const email = texto(corpo.email, 160).toLowerCase();
     const telefone = texto(corpo.telefone, 40) || null;
@@ -61,7 +73,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, erro: "A capacidade precisa ser um número inteiro maior que zero." });
     }
 
-    const senha = senhaProvisoria();
+    const senha = SENHA_PROVISORIA;
     const { data: criado, error: erroAuth } = await admin.auth.admin.createUser({
       email,
       password: senha,

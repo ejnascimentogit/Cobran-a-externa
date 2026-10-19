@@ -69,6 +69,7 @@ function TrocarSenha() {
     e.preventDefault();
     if (a.length < 8) return setMsg('A senha precisa ter pelo menos 8 caracteres.');
     if (a !== b) return setMsg('As duas senhas não são iguais.');
+    if (a === '12345678') return setMsg('Essa é a senha provisória. Escolha uma senha só sua.');
     const { error } = await supabase.auth.updateUser({ password: a, data: { trocar_senha: false } });
     if (error) setMsg('Não consegui trocar a senha. Tente de novo com sinal.');
   };
