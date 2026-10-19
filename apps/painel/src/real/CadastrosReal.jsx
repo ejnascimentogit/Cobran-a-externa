@@ -36,6 +36,20 @@ function Motoqueiros() {
     setF({ nome: '', email: '', telefone: '', veiculo: '', capacidade: 8 });
     recarregar();
   };
+  const novaSenha = async c => {
+    if (!window.confirm(`Gerar nova senha para ${c.cob01_nome}? A senha atual deixa de valer e ele terá de escolher outra no próximo acesso.`)) return;
+    setMsg('');
+    setNova(null);
+    const { data: renovada } = await supabase.auth.refreshSession();
+    if (!renovada?.session) { await supabase.auth.signOut(); return; }
+    const { data, error } = await supabase.functions.invoke(FUNCAO_CRIAR_COBRADOR, { body: { acao: 'redefinir_senha', cobrador_id: c.cob01_id } });
+    if (error) return setMsg('Não consegui chamar a função. Confira se a versão nova dela está publicada.');
+    if (!data?.ok) {
+      if (/sessão inválida/i.test(data?.erro || '')) { await supabase.auth.signOut(); return; }
+      return setMsg(data?.erro || 'Não consegui gerar a nova senha.');
+    }
+    setNova({ nome: c.cob01_nome, email: c.cob01_email, senha: data.senha_provisoria, redefinida: true });
+  };
   const alternar = async c => {
     const { error } = await supabase.from('cob01_cobrador').update({ cob01_ativo: !c.cob01_ativo }).eq('cob01_id', c.cob01_id);
     if (error) setMsg(mensagemDeErro(error));
@@ -49,12 +63,12 @@ function Motoqueiros() {
       {(erro || msg) && <div className="erro">{msg || erro}</div>}
       {nova && (
         <div className="ok">
-          <b>Login criado para {nova.nome}.</b> Entregue estes dados a ele. A senha provisória é sempre <b>12345678</b>; no primeiro acesso o app obriga ele a escolher a própria.
+          <b>{nova.redefinida ? `Nova senha gerada para ${nova.nome}.` : `Login criado para ${nova.nome}.`}</b> Entregue estes dados a ele. A senha provisória é sempre <b>12345678</b>; no primeiro acesso o app obriga ele a escolher a própria.
           <div style={{ marginTop: '.4rem' }}>E-mail: <code>{nova.email}</code><br />Senha provisória: <code>{nova.senha}</code></div>
         </div>
       )}
       <div className="tabela-rolagem"><table>
-        <thead><tr><th>Nome</th><th>Veículo</th><th className="num">Visitas/dia</th><th>Localização</th><th>Ativo</th></tr></thead>
+        <thead><tr><th>Nome</th><th>Veículo</th><th className="num">Visitas/dia</th><th>Localização</th><th>Ativo</th><th></th></tr></thead>
         <tbody>
           {(dados || []).map(c => (
             <tr key={c.cob01_id}>
@@ -62,9 +76,10 @@ function Motoqueiros() {
               <td className="num">{c.cob01_capacidade}</td>
               <td className="suave">{c.cob01_consentimento_em ? `Aceitou em ${dataBR(c.cob01_consentimento_em.slice(0, 10))} ${horaBR(c.cob01_consentimento_em)}` : 'Ainda não aceitou'}</td>
               <td><input type="checkbox" checked={c.cob01_ativo} onChange={() => alternar(c)} /></td>
+              <td><button onClick={() => novaSenha(c)}>Gerar nova senha</button></td>
             </tr>
           ))}
-          {dados && !dados.length && <tr><td colSpan="5" className="suave">Nenhum motoqueiro.</td></tr>}
+          {dados && !dados.length && <tr><td colSpan="6" className="suave">Nenhum motoqueiro.</td></tr>}
         </tbody>
       </table></div>
       <h3 style={{ marginTop: '1rem' }}>Novo motoqueiro</h3>
