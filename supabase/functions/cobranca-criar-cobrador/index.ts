@@ -17,11 +17,9 @@ const CORS = {
 const json = (corpo: unknown) =>
   new Response(JSON.stringify(corpo), { headers: { ...CORS, "Content-Type": "application/json" } });
 
-function senhaProvisoria(): string {
-  const alfabeto = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(bytes, (b) => alfabeto[b % alfabeto.length]).join("");
-}
+// Decisão do Edimilson (2026-10-19): a senha provisória é sempre esta. O login nasce com
+// trocar_senha = true e o app obriga a escolher a senha própria (mínimo 8 caracteres) no primeiro acesso.
+const SENHA_PROVISORIA = "123456";
 
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
@@ -61,7 +59,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, erro: "A capacidade precisa ser um número inteiro maior que zero." });
     }
 
-    const senha = senhaProvisoria();
+    const senha = SENHA_PROVISORIA;
     const { data: criado, error: erroAuth } = await admin.auth.admin.createUser({
       email,
       password: senha,
