@@ -16,14 +16,27 @@ AND    column_name IN ('CODCLI','CODFILIAL','DUPLIC','PREST','NUMTRANSVENDA','CO
                        'CODPRACA','PRACA','CODUSUR1','DTEXCLUSAO','LATITUDE','LONGITUDE')
 ORDER  BY table_name, column_name;
 
+-- 0b) DESCOBERTA DA ROTA: onde o WinThor deste cliente guarda a rota do cliente/praça (varia muito).
+--     Procure no resultado a coluna que liga cliente ou praça a uma rota (ex.: PCPRACA.ROTA, PCPRACA.NUMREGIAO, PCROTAEXP.*).
+SELECT table_name, column_name, data_type
+FROM   all_tab_columns
+WHERE  table_name LIKE 'PC%' AND column_name LIKE '%ROTA%'
+ORDER  BY table_name, column_name;
+SELECT column_name, data_type FROM all_tab_columns WHERE table_name = 'PCPRACA' ORDER BY column_id;
+
 -- A) CHAVES: todos os títulos vencidos em aberto, de todos os clientes (leve; roda de madrugada).
 SELECT p.CODFILIAL                                          AS filial,
        p.DUPLIC                                             AS duplicata,
        p.PREST                                              AS prestacao,
        p.CODCLI                                             AS cod_cliente,
+       c.CODPRACA                                           AS cod_praca,
+       pr.PRACA                                             AS praca,
+       pr.ROTA                                              AS rota,          -- CONFIRMAR pela consulta 0b (pode ser outra tabela/coluna)
        p.DTVENC                                             AS vencimento,
        p.VALOR                                              AS valor
 FROM   PCPREST p
+JOIN   PCCLIENT c  ON c.CODCLI = p.CODCLI
+LEFT   JOIN PCPRACA pr ON pr.CODPRACA = c.CODPRACA
 WHERE  p.DTPAG IS NULL
 AND    p.DTVENC < TRUNC(SYSDATE)
 AND    p.CODCOB NOT IN ('DESD', 'CANC')                     -- CONFIRMAR a lista de cobranças a excluir no cliente
@@ -47,6 +60,7 @@ SELECT p.CODFILIAL                                          AS filial,
        c.TELCOB, c.TELENT, c.TELCELENT,
        c.CODPRACA                                           AS cod_praca,
        pr.PRACA                                             AS praca,
+       pr.ROTA                                              AS rota,          -- CONFIRMAR pela consulta 0b
        c.CODUSUR1                                           AS cod_rca,
        c.LATITUDE, c.LONGITUDE                              -- se a consulta 0 não achar, tirar estas duas
 FROM   PCPREST p
