@@ -27,7 +27,7 @@ svg{width:100%;height:auto;display:block}
 <div class="topo"><div><h1>Integração segura com o WinThor</h1><small>Cobrança Externa · leitura de títulos vencidos</small></div><small>Versão para o cliente</small></div>
 
 <h2>O que a integração faz</h2>
-<p>A Cobrança Externa lê do seu WinThor <b>apenas os títulos vencidos em aberto</b> e os dados de contato do cliente devedor (nome, endereço, telefone, praça e rota), para montar as rotas de cobrança presencial. Depois, confere diariamente quais títulos foram pagos. <b>Nada é gravado ou alterado no seu ERP.</b></p>
+<p>A Cobrança Externa lê do seu WinThor <b>apenas os títulos vencidos em aberto</b>, na faixa de atraso que você definir (por exemplo, de 30 a 180 dias), e os dados de contato do cliente devedor (nome, endereço, telefone, praça e rota), para montar as rotas de cobrança presencial. Depois, confere diariamente quais títulos foram pagos. <b>Nada é gravado ou alterado no seu ERP.</b></p>
 
 <h2>Como os dados trafegam</h2>
 <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
@@ -44,8 +44,8 @@ svg{width:100%;height:auto;display:block}
 
   <rect x="146" y="52" width="96" height="70" rx="9" fill="#fff" stroke="#1d4ed8" stroke-width="1.6"/>
   <text x="194" y="80" font-size="12" font-weight="700" text-anchor="middle">API de leitura</text>
-  <text x="194" y="96" font-size="9" text-anchor="middle" fill="#475569">3 consultas fixas</text>
-  <text x="194" y="110" font-size="9" text-anchor="middle" fill="#475569">escuta só 127.0.0.1</text>
+  <text x="194" y="96" font-size="9" text-anchor="middle" fill="#475569">consultas padronizadas</text>
+  <text x="194" y="110" font-size="9" text-anchor="middle" fill="#475569">acessível só pelo túnel</text>
 
   <rect x="274" y="52" width="96" height="70" rx="9" fill="#fff" stroke="#1d4ed8" stroke-width="1.6"/>
   <text x="322" y="80" font-size="12" font-weight="700" text-anchor="middle">cloudflared</text>
@@ -80,7 +80,7 @@ svg{width:100%;height:auto;display:block}
 
   <g font-size="10" fill="#0f172a">
     <circle cx="26" cy="292" r="6" fill="#116a35"/><text x="38" y="296">Nenhuma porta de entrada aberta no cliente</text>
-    <circle cx="26" cy="314" r="6" fill="#116a35"/><text x="38" y="318">Só consultas fixas, sem SQL livre; ERP nunca é alterado</text>
+    <circle cx="26" cy="314" r="6" fill="#116a35"/><text x="38" y="318">Só consultas de leitura padronizadas; ERP nunca é alterado</text>
     <circle cx="26" cy="336" r="6" fill="#116a35"/><text x="38" y="340">Só títulos vencidos em aberto e dados do devedor saem</text>
     <circle cx="396" cy="292" r="6" fill="#116a35"/><text x="408" y="296">Criptografia (TLS) em todo o trajeto</text>
     <circle cx="396" cy="314" r="6" fill="#116a35"/><text x="408" y="318">Cloudflare Access barra quem não tem o token</text>
@@ -98,7 +98,7 @@ svg{width:100%;height:auto;display:block}
 <h2>Passo a passo (por cliente)</h2>
 <ol class="passos">
 <li><div><b>Autorizar a instalação.</b> Liberar a instalação de um serviço e a saída HTTPS (porta 443). Não é preciso abrir nenhuma porta de entrada.</div><span class="quem ti">TI do cliente</span></li>
-<li><div><b>Usuário de leitura no Oracle.</b> Criar um usuário apenas com <code>SELECT</code> em <code>PCPREST</code>, <code>PCCLIENT</code> e <code>PCPRACA</code>.</div><span class="quem ti">TI do cliente</span></li>
+<li><div><b>Usuário de leitura no Oracle.</b> Criar um usuário apenas com permissão de leitura (<code>SELECT</code>) nas tabelas de títulos e clientes necessárias. A lista exata é combinada na implantação.</div><span class="quem ti">TI do cliente</span></li>
 <li><div><b>Consultas de verificação.</b> Rodar as consultas de conferência de colunas (coordenadas, praça e rota) e enviar o resultado ao analista do EFR.</div><span class="quem an">Analista do EFR</span></li>
 <li><div><b>Criar o túnel.</b> Um túnel exclusivo para o cliente, com endereço próprio, no Cloudflare Zero Trust.</div><span class="quem efr">Equipe EFR</span></li>
 <li><div><b>Instalar no servidor.</b> Instalar o <code>cloudflared</code> (com o token do túnel) e a API de leitura, em um servidor que fique ligado e alcance o Oracle.</div><span class="quem ti">TI + Analista EFR</span></li>
@@ -109,13 +109,13 @@ svg{width:100%;height:auto;display:block}
 <h2>Segurança</h2>
 <div class="grade">
 <div class="cx"><b>Acesso ao ERP</b><ul>
-<li>Usuário Oracle somente leitura, apenas nas 3 tabelas</li>
-<li>Consultas fixas, com parâmetros (sem SQL livre)</li>
-<li>Limite de 500 chaves por chamada e de chamadas por minuto</li></ul></div>
+<li>Usuário Oracle somente leitura, só nas tabelas combinadas</li>
+<li>Consultas padrão, com parâmetros (ex.: faixa de dias em atraso)</li>
+<li>Limite de volume por consulta e de consultas por minuto</li></ul></div>
 <div class="cx"><b>Acesso ao túnel</b><ul>
 <li>Token de serviço com validade, renovado periodicamente</li>
 <li>Segunda trava: assinatura com data e hora em cada pedido</li>
-<li>API escuta somente em 127.0.0.1</li></ul></div>
+<li>A API só aceita pedidos que chegam pelo túnel</li></ul></div>
 <div class="cx"><b>Dados</b><ul>
 <li>Só títulos vencidos em aberto e dados do devedor</li>
 <li>Cada empresa vê apenas os próprios dados</li>

@@ -4,7 +4,7 @@
 -- Rode a consulta 0 no ambiente do cliente e ajuste o que ela não encontrar. Nenhum usuário/senha neste arquivo.
 -- Só títulos VENCIDOS entram (decisão do Edimilson, 2026-10-20).
 -- Chave do título (a confirmar com o Ryan): CODFILIAL | DUPLIC | PREST.
--- Binds: :filial (opcional, null = todas). Em B e C a API troca a lista :k1..:kN por até 500 chaves por chamada.
+-- Binds: :dias_min e :dias_max (faixa de atraso que o cliente digita no painel), :filial (opcional, null = todas). Em B e C a API troca a lista :k1..:kN por até 500 chaves por chamada.
 
 -- 0) DESCOBERTA: confere se as colunas existem (rodar uma vez em cada cliente).
 SELECT table_name, column_name, data_type, data_length
@@ -38,7 +38,7 @@ FROM   PCPREST p
 JOIN   PCCLIENT c  ON c.CODCLI = p.CODCLI
 LEFT   JOIN PCPRACA pr ON pr.CODPRACA = c.CODPRACA
 WHERE  p.DTPAG IS NULL
-AND    p.DTVENC < TRUNC(SYSDATE)
+AND    TRUNC(SYSDATE) - TRUNC(p.DTVENC) BETWEEN :dias_min AND :dias_max   -- faixa de atraso digitada no painel (ex.: 30 a 180); mínimo 1 = só vencidos
 AND    p.CODCOB NOT IN ('DESD', 'CANC')                     -- CONFIRMAR a lista de cobranças a excluir no cliente
 AND    (:filial IS NULL OR p.CODFILIAL = :filial);
 
