@@ -41,3 +41,11 @@ Este documento define só o **contrato**: o que o sistema de cobrança espera re
 - [ ] Confirmar tabelas e campos de títulos, clientes e baixas.
 - [ ] Verificar se o cadastro já tem latitude/longitude.
 - [ ] Definir como o sistema de cobrança será avisado de falha na carga.
+
+## Desenho escolhido: API no cliente + Cloudflare Tunnel (proposta, 2026-10-20)
+
+- **No servidor do cliente:** `cloudflared` (túnel de saída, sem porta de entrada) + uma API pequena que executa **só** as consultas fixas de `docs/erp/consultas-winthor.sql` (clientes em atraso, títulos em aberto, baixas). Nada de SQL livre pela API. Usuário Oracle só com `SELECT` nas tabelas necessárias.
+- **Proteção do túnel:** Cloudflare Access com *service token* (o Supabase chama com ele); credenciais do Oracle só no servidor do cliente.
+- **No Supabase:** uma Edge Function agendada (`pg_cron`) chama a API e grava em `int05_titulo_erp` e nos clientes da cobrança (papel `agente_N`). A conexão de cada empresa fica em `int02_erp`.
+- **A confirmar com o Ryan:** como o e-commerce já fala com o WinThor (VPN, túnel ou agente), para reaproveitar o mesmo caminho em vez de abrir outro.
+- **SQL:** `docs/erp/consultas-winthor.sql` (rascunho; rodar a consulta 0 em cada cliente para conferir nomes e versões de coluna).
